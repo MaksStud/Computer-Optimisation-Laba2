@@ -36,13 +36,13 @@ class SimplexMethod:
     #    return np.argmin(ratios)
 
     def _pivot(self, pivot_row, pivot_col):
-        self.__print_pretamble(pivot_col, pivot_row)
+        self._print_pretamble(pivot_col, pivot_row)
         self.tableau[pivot_row, :] /= self.tableau[pivot_row, pivot_col]
         for i in range(len(self.tableau)):
             if i != pivot_row:
                 self.tableau[i, :] -= self.tableau[i, pivot_col] * self.tableau[pivot_row, :]
         self.basis[pivot_row] = pivot_col
-        self.__print_after_tamble()
+        self._print_after_tamble()
 
     def solve(self):
         while np.any(self.tableau[-1, :-1] < 0):
@@ -60,14 +60,14 @@ class SimplexMethod:
                 solution[var_index] = self.tableau[i, -1]
         return solution
 
-    def __print_pretamble(self, pivot_col, pivot_row):
+    def _print_pretamble(self, pivot_col, pivot_row):
         if self._print:
             print(f"\nОбираємо ведучий стовпець: {pivot_col}, ведучий рядок: {pivot_row}")
             print("Поточна симплекс-таблиця перед обчисленням:")
             print(self.tableau)
             print()
 
-    def __print_after_tamble(self):
+    def _print_after_tamble(self):
         if self._print:
             print("Оновлена симплекс-таблиця:")
             print(self.tableau)
