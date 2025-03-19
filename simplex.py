@@ -2,13 +2,14 @@ import numpy as np
 
 
 class SimplexMethod:
-    def __init__(self, A, b, c):
+    def __init__(self, A, b, c, _print=False):
         self.A = np.array(A, dtype=float)
         self.b = np.array(b, dtype=float)
         self.c = np.array(c, dtype=float)
         self.num_constraints, self.num_variables = self.A.shape
         self.tableau = self._initialize_tableau()
         self.basis = list(range(self.num_variables, self.num_variables + self.num_constraints))
+        self._print = _print
 
     def _initialize_tableau(self):
         tableau = np.zeros((self.num_constraints + 1, self.num_variables + self.num_constraints + 1))
@@ -35,11 +36,13 @@ class SimplexMethod:
     #    return np.argmin(ratios)
 
     def _pivot(self, pivot_row, pivot_col):
+        self.__print_pretamble(pivot_col, pivot_row)
         self.tableau[pivot_row, :] /= self.tableau[pivot_row, pivot_col]
         for i in range(len(self.tableau)):
             if i != pivot_row:
                 self.tableau[i, :] -= self.tableau[i, pivot_col] * self.tableau[pivot_row, :]
         self.basis[pivot_row] = pivot_col
+        self.__print_after_tamble()
 
     def solve(self):
         while np.any(self.tableau[-1, :-1] < 0):
@@ -56,3 +59,15 @@ class SimplexMethod:
             if var_index < self.num_variables:
                 solution[var_index] = self.tableau[i, -1]
         return solution
+
+    def __print_pretamble(self, pivot_col, pivot_row):
+        if self._print:
+            print(f"\nОбираємо ведучий стовпець: {pivot_col}, ведучий рядок: {pivot_row}")
+            print("Поточна симплекс-таблиця перед обчисленням:")
+            print(self.tableau)
+            print()
+
+    def __print_after_tamble(self):
+        if self._print:
+            print("Оновлена симплекс-таблиця:")
+            print(self.tableau)
