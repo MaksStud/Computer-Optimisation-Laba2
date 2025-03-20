@@ -1,8 +1,9 @@
 import numpy as np
+from tabulate import tabulate
 
 
 class SimplexMethod:
-    def __init__(self, A, b, c, _print=False, old_get_pilot = True):
+    def __init__(self, A, b, c, _print=False, old_get_pilot=True):
         self.A = np.array(A, dtype=float)
         self.b = np.array(b, dtype=float)
         self.c = np.array(c, dtype=float)
@@ -24,23 +25,20 @@ class SimplexMethod:
 
     def _get_pivot_row_old(self, pivot_col):
         ratios = self.tableau[:-1, -1] / self.tableau[:-1, pivot_col]
-        ratios[ratios <= 0] = np.inf  # Уникнення від'ємних або нульових значень
+        ratios[ratios <= 0] = np.inf
         return np.argmin(ratios)
 
     def _get_pivot_row_new(self, pivot_col):
         column = self.tableau[:-1, pivot_col]
-        positive_mask = column > 0  # Враховуємо лише додатні значення
-        if not np.any(positive_mask):  # Якщо немає позитивних значень, рішення може бути необмеженим
+        positive_mask = column > 0
+        if not np.any(positive_mask):
             raise ValueError("Розв’язок необмежений")
-        ratios = np.full_like(column, np.inf, dtype=float)  # Заповнюємо inf, щоб уникнути помилок
+        ratios = np.full_like(column, np.inf, dtype=float)
         ratios[positive_mask] = self.tableau[:-1, -1][positive_mask] / column[positive_mask]
         return np.argmin(ratios)
 
     def _get_pivot_row(self, pivot_col):
-        if self.old_get_pilot:
-            return self._get_pivot_row_old(pivot_col)
-        return self._get_pivot_row_new(pivot_col)
-
+        return self._get_pivot_row_old(pivot_col) if self.old_get_pilot else self._get_pivot_row_new(pivot_col)
 
     def _pivot(self, pivot_row, pivot_col):
         self._print_pretamble(pivot_col, pivot_row)
@@ -62,15 +60,14 @@ class SimplexMethod:
         optimal_value = -self.tableau[-1, -1]
         solution = self._get_solution()
 
-        # --- Перевірка на альтернативні оптимальні розв’язки ---
         alternative_solutions = []
         for j in range(self.num_variables):
-            if j not in self.basis and np.isclose(self.tableau[-1, j], 0):  # Якщо коефіцієнт оцінки 0
+            if j not in self.basis and np.isclose(self.tableau[-1, j], 0):
                 try:
                     alternative_solution = self._get_alternative_solution(j)
                     alternative_solutions.append(alternative_solution)
                 except ValueError:
-                    continue  # Якщо для цього j не можна побудувати базисний розв’язок
+                    continue
 
         return optimal_value, solution, alternative_solutions
 
@@ -85,13 +82,21 @@ class SimplexMethod:
         if self._print:
             print(f"\nОбираємо ведучий стовпець: {pivot_col}, ведучий рядок: {pivot_row}")
             print("Поточна симплекс-таблиця перед обчисленням:")
-            print(self.tableau)
-            print()
+            self._print_tableau()
 
     def _print_after_tamble(self):
         if self._print:
             print("Оновлена симплекс-таблиця:")
-            print(self.tableau)
+            self._print_tableau()
+
+    def _print_tableau(self):
+        headers = [f"x{i}" for i in range(self.num_variables)] + \
+                  [f"s{i}" for i in range(self.num_constraints)] + ["b"]
+
+        row_labels = [f"B{self.basis[i]}" for i in range(self.num_constraints)] + ["Z"]
+        table = np.round(self.tableau, 4).tolist()
+
+        print(tabulate(table, headers=headers, showindex=row_labels, tablefmt="fancy_grid"))
 
     def _get_alternative_solution(self, pivot_col):
         pivot_row = self._get_pivot_row(pivot_col)
@@ -108,4 +113,3 @@ class SimplexMethod:
         self.basis = basis_copy
 
         return alternative_solution
-
