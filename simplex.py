@@ -58,7 +58,21 @@ class SimplexMethod:
             if np.all(self.tableau[:-1, pivot_col] <= 0):
                 raise ValueError("Розв’язок необмежений")
             self._pivot(pivot_row, pivot_col)
-        return -self.tableau[-1, -1], self._get_solution()
+
+        optimal_value = -self.tableau[-1, -1]
+        solution = self._get_solution()
+
+        # --- Перевірка на альтернативні оптимальні розв’язки ---
+        alternative_solutions = []
+        for j in range(self.num_variables):
+            if j not in self.basis and np.isclose(self.tableau[-1, j], 0):  # Якщо коефіцієнт оцінки 0
+                try:
+                    alternative_solution = self._get_alternative_solution(j)
+                    alternative_solutions.append(alternative_solution)
+                except ValueError:
+                    continue  # Якщо для цього j не можна побудувати базисний розв’язок
+
+        return optimal_value, solution, alternative_solutions
 
     def _get_solution(self):
         solution = np.zeros(self.num_variables)
@@ -78,3 +92,20 @@ class SimplexMethod:
         if self._print:
             print("Оновлена симплекс-таблиця:")
             print(self.tableau)
+
+    def _get_alternative_solution(self, pivot_col):
+        pivot_row = self._get_pivot_row(pivot_col)
+        if np.all(self.tableau[:-1, pivot_col] <= 0):
+            raise ValueError("Не можна знайти альтернативний розв’язок")
+
+        tableau_copy = self.tableau.copy()
+        basis_copy = self.basis.copy()
+
+        self._pivot(pivot_row, pivot_col)
+        alternative_solution = self._get_solution()
+
+        self.tableau = tableau_copy
+        self.basis = basis_copy
+
+        return alternative_solution
+

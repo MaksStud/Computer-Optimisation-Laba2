@@ -20,12 +20,13 @@ c = [-1, -1, -1, -5]
 b = [17, -9]
 c = [-4,- 3, -5, 20]"""
 
-simplex = SimplexMethod(A, b, c)
-optimal_value, coordinates = simplex.solve()
+simplex = SimplexMethod(A, b, c, True)
+optimal_value, coordinates, alternative_solutions = simplex.solve()
 print()
 print("Задача 1 (мої код):")
 print("Оптимальне рішення:", coordinates)
 print("Оптимальне значення функції:", optimal_value)
+print("Альтернативне значення функції:", alternative_solutions)
 
 
 res1 = linprog(c, A_eq=A, b_eq=b, method='highs')
