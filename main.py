@@ -20,7 +20,7 @@ c = [-1, -1, -1, -5]
 b = [17, -9]
 c = [-4,- 3, -5, 20]"""
 
-simplex = SimplexMethod(A, b, c, True)
+simplex = SimplexMethod(A, b, c)
 optimal_value, coordinates = simplex.solve()
 print()
 print("Задача 1 (мої код):")

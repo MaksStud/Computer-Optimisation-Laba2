@@ -2,7 +2,7 @@ import numpy as np
 
 
 class SimplexMethod:
-    def __init__(self, A, b, c, _print=False):
+    def __init__(self, A, b, c, _print=False, old_get_pilot = True):
         self.A = np.array(A, dtype=float)
         self.b = np.array(b, dtype=float)
         self.c = np.array(c, dtype=float)
@@ -10,6 +10,7 @@ class SimplexMethod:
         self.tableau = self._initialize_tableau()
         self.basis = list(range(self.num_variables, self.num_variables + self.num_constraints))
         self._print = _print
+        self.old_get_pilot = old_get_pilot
 
     def _initialize_tableau(self):
         tableau = np.zeros((self.num_constraints + 1, self.num_variables + self.num_constraints + 1))
@@ -21,19 +22,25 @@ class SimplexMethod:
     def _get_pivot_column(self):
         return np.argmin(self.tableau[-1, :-1])
 
-    def _get_pivot_row(self, pivot_col):
+    def _get_pivot_row_old(self, pivot_col):
         ratios = self.tableau[:-1, -1] / self.tableau[:-1, pivot_col]
         ratios[ratios <= 0] = np.inf  # Уникнення від'ємних або нульових значень
         return np.argmin(ratios)
 
-    #def _get_pivot_row(self, pivot_col):
-    #    column = self.tableau[:-1, pivot_col]
-    #    positive_mask = column > 0  # Враховуємо лише додатні значення
-    #    if not np.any(positive_mask):  # Якщо немає позитивних значень, рішення може бути необмеженим
-    #        raise ValueError("Розв’язок необмежений")
-    #    ratios = np.full_like(column, np.inf, dtype=float)  # Заповнюємо inf, щоб уникнути помилок
-    #    ratios[positive_mask] = self.tableau[:-1, -1][positive_mask] / column[positive_mask]
-    #    return np.argmin(ratios)
+    def _get_pivot_row_new(self, pivot_col):
+        column = self.tableau[:-1, pivot_col]
+        positive_mask = column > 0  # Враховуємо лише додатні значення
+        if not np.any(positive_mask):  # Якщо немає позитивних значень, рішення може бути необмеженим
+            raise ValueError("Розв’язок необмежений")
+        ratios = np.full_like(column, np.inf, dtype=float)  # Заповнюємо inf, щоб уникнути помилок
+        ratios[positive_mask] = self.tableau[:-1, -1][positive_mask] / column[positive_mask]
+        return np.argmin(ratios)
+
+    def _get_pivot_row(self, pivot_col):
+        if self.old_get_pilot:
+            return self._get_pivot_row_old(pivot_col)
+        return self._get_pivot_row_new(pivot_col)
+
 
     def _pivot(self, pivot_row, pivot_col):
         self._print_pretamble(pivot_col, pivot_row)
