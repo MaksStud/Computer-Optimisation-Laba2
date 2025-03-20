@@ -1,3 +1,3 @@
-Реалізація симплекс методу:
-  Варіант 17.
-  Предмет комп'ютерної оптимізації.
+Implementation of the simplex method:
+  Option 17.
+  The subject of computer optimization.
